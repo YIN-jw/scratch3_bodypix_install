@@ -132,8 +132,6 @@ const canvas = require('canvas')
 该API输入为一个或多个人的图像，person segmentation可做出对所有人体(此处不用区分单人或多人)的分割。它返回PersonSegmentation对应于图像中人物分割的对象。它不会在不同的个人之间消除歧义（即不会将多人中每个人区分开）。如果您需要将个人细分，请使用segmentMultiPerson（警告是此方法比较慢）。<br>
 ```
 ......
-    personSegmentation(args, util) {
-        return new Promise((resolve, reject) => {
         setInterval(async () => {
 				const imageElement = this.video;
 				this.video.width = 640;
@@ -144,13 +142,10 @@ const canvas = require('canvas')
 				const maxDetections = 5;
 				const scoreThreshold = 0.3;
 				const nmsRadius = 20;
-				//
 				const net = this.bodyPix;
                 const personsegmentation = await net.segmentPerson(imageElement,{flipHorizontal,internalResolution,segmentationThreshold,maxDetections,scoreThreshold,nmsRadius}); 
                 console.log(personsegmentation)
             },5000);
-        })
-    }
 ......
 ```
 返回personsegmentation，包括画布中每个像素的值，背景为0，人物为1，并且包括每个人的pose内容。图像中的多个人合并为一个二进制图像，相当于输出的是一个单个数组。<br>
@@ -158,8 +153,6 @@ const canvas = require('canvas')
 输入为一个或多个人的图像，BodyPix的segmentPersonParts方法可以对图像中所有人的24个身体部位进行分割。PartSegmentation对于所有人体，它为每个像素返回对应于身体部位的对象。如果您需要将个人细分，请使用segmentMultiPersonParts（警告是此方法比较慢）。
 ```
 ......
-   personbodypartSegmentation(args, util) {
-	return new Promise((resolve, reject) => {
         this.timer = setInterval(async () => {
 				const imageElement = this.video;
 				this.video.width = 640;
@@ -175,8 +168,6 @@ const canvas = require('canvas')
                 const personbodypartsegmentation = await net.segmentPersonParts(imageElement,{flipHorizontal,internalResolution,segmentationThreshold,maxDetections,scoreThreshold,nmsRadius});
                 console.log(personbodypartsegmentation)
             }, 5000);
-        })
-    }
 ......
 ```
 返回该personbodypartsegmentation对象包含一个宽度，高度，Pose和一个Int32Array，其ID为对应的身体部位的一部分，其ID为0-24，否则为-1。即像素点为-1表示非人员部分，为0表示为人体的左脸。当图像中有多个人时，他们将合并为单个数组。<br>
@@ -184,8 +175,6 @@ const canvas = require('canvas')
 给定一个包含多人的图像，多人分割模型可以分别预测每个人的分割(能将多人中每个人再区分开)。它返回一个数组，PersonSegmentation每个数组对应一个人。每个元素都是一个人的二进制数组，其中一个人的像素为1，否则为0。阵列大小对应于图像中的像素数。如果您不需要将个人细分，则使用segmentPerson速度更快且不会细分个人。<br>
 ```
 ......
-	multipersonSegmentation(args, util) {
-		return new Promise((resolve, reject) => {
             this.timer = setInterval(async () => {
 				const imageElement = this.video;
 				this.video.width = 640;
@@ -202,9 +191,6 @@ const canvas = require('canvas')
 				const net = this.bodyPix;
                 const multipersonsegmentation = await net.segmentPersonParts(imageElement,{flipHorizontal,internalResolution,segmentationThreshold,maxDetections,scoreThreshold,nmsRadius,minKeypointScore,refineSteps}); 
             }, 5000);
-			//
-        })
-    }
 ......
 ```
 返回一个数组multipersonsegmentation,当图像中有多个人时，multipersonsegmentataion数组中的每个对象代表一个人。除了width，height和data，PersonSegmentation对象也有一个字段pose，与posenet插件类似。data对象包括每个像素的值，为1表示人像，为0表示背景，-1为非人像背景。<br>
@@ -213,8 +199,6 @@ const canvas = require('canvas')
 给定具有多个人的图像。BodyPix的segmentMultiPersonParts方法可以预测每个人的24个身体部位细分。它返回一个数组的PartSegmentations，各自对应的人之一。该PartSegmentation对象包含一个宽度，高度Pose和一个Int32Array，其ID为对应的身体部位的一部分，其ID为0-24，否则为-1。<br>
 ```
 ......
-	multipersonbodypartSegmentation(args, util) {
-		return new Promise((resolve, reject) => {
             this.timer = setInterval(async () => {
 				const imageElement = this.video;
 				this.video.width = 640;
@@ -232,9 +216,6 @@ const canvas = require('canvas')
                 const multipersonbodypartsegmentation = await net.segmentMultiPersonParts(imageElement,{flipHorizontal,internalResolution,segmentationThreshold,maxDetections,scoreThreshold,nmsRadius,minKeypointScore,refineSteps}); 
                 console.log(multipersonbodypartsegmentation)
             }, 5000);
-			//
-        })
-    }
 ......
 ```
 返回数组multipersonbodypartsegmentation，当图像中有多个人时，数组中的每个对象代表一个人。除了width，height和data，multipersonbodypartsegmentation对象也有一个字段pose,它包含每个人的姿势与PoseNet模型相同，但准确性较差。data对象中包括每个像素的值，当为-1时代表非人像背景，为0时代表左脸。（0——23）<br>
