@@ -1,0 +1,2 @@
+# scratch3_bodypix_install
+在Scratch3.0上安装bodypix插件
