@@ -133,12 +133,8 @@ const canvas = require('canvas')
 ```
 ......
     personSegmentation(args, util) {
-        if (this.globalVideoState === VideoState.OFF) {
-            alert('请先打开摄像头')
-            return
-        }
-		return new Promise((resolve, reject) => {
-        this.timer = setInterval(async () => {
+        return new Promise((resolve, reject) => {
+        setInterval(async () => {
 				const imageElement = this.video;
 				this.video.width = 640;
 				this.video.height = 480;
@@ -151,7 +147,6 @@ const canvas = require('canvas')
 				//
 				const net = this.bodyPix;
                 const personsegmentation = await net.segmentPerson(imageElement,{flipHorizontal,internalResolution,segmentationThreshold,maxDetections,scoreThreshold,nmsRadius}); 
-                resolve('is loaded')
                 console.log(personsegmentation)
             },5000);
         })
@@ -163,12 +158,8 @@ const canvas = require('canvas')
 输入为一个或多个人的图像，BodyPix的segmentPersonParts方法可以对图像中所有人的24个身体部位进行分割。PartSegmentation对于所有人体，它为每个像素返回对应于身体部位的对象。如果您需要将个人细分，请使用segmentMultiPersonParts（警告是此方法比较慢）。
 ```
 ......
-	personbodypartSegmentation(args, util) {
-        if (this.globalVideoState === VideoState.OFF) {
-            alert('请先打开摄像头')
-            return
-        }
-		return new Promise((resolve, reject) => {
+   personbodypartSegmentation(args, util) {
+	return new Promise((resolve, reject) => {
         this.timer = setInterval(async () => {
 				const imageElement = this.video;
 				this.video.width = 640;
@@ -181,9 +172,7 @@ const canvas = require('canvas')
 				const nmsRadius = 20;
 				//
 				const net = this.bodyPix;
-                const personbodypartsegmentation = await net.segmentPersonParts(imageElement,{flipHorizontal,internalResolution,segmentationThreshold,maxDetections,scoreThreshold,nmsRadius}); 
-				resolve('is loaded')
-                
+                const personbodypartsegmentation = await net.segmentPersonParts(imageElement,{flipHorizontal,internalResolution,segmentationThreshold,maxDetections,scoreThreshold,nmsRadius});
                 console.log(personbodypartsegmentation)
             }, 5000);
         })
@@ -192,4 +181,132 @@ const canvas = require('canvas')
 ```
 返回该personbodypartsegmentation对象包含一个宽度，高度，Pose和一个Int32Array，其ID为对应的身体部位的一部分，其ID为0-24，否则为-1。即像素点为-1表示非人员部分，为0表示为人体的左脸。当图像中有多个人时，他们将合并为单个数组。<br>
 4.3、Multi-person segmentation<br>
-给定一个包含多人的图像，多人分割模型可以分别预测每个人的分割(能将多人中每个人再区分开)。它返回一个数组，PersonSegmentation每个数组对应一个人。每个元素都是一个人的二进制数组，其中一个人的像素为1，否则为0。阵列大小对应于图像中的像素数。如果您不需要将个人细分，则使用segmentPerson速度更快且不会细分个人。
+给定一个包含多人的图像，多人分割模型可以分别预测每个人的分割(能将多人中每个人再区分开)。它返回一个数组，PersonSegmentation每个数组对应一个人。每个元素都是一个人的二进制数组，其中一个人的像素为1，否则为0。阵列大小对应于图像中的像素数。如果您不需要将个人细分，则使用segmentPerson速度更快且不会细分个人。<br>
+```
+......
+	multipersonSegmentation(args, util) {
+		return new Promise((resolve, reject) => {
+            this.timer = setInterval(async () => {
+				const imageElement = this.video;
+				this.video.width = 640;
+				this.video.height = 480;
+				const flipHorizontal = false;
+				const internalResolution = 'medium';
+				const segmentationThreshold = 0.7;
+				const maxDetections = 5;
+				const scoreThreshold = 0.2;
+				const nmsRadius = 20;
+				const minKeypointScore = 0.3;
+				const refineSteps = 10;
+				//
+				const net = this.bodyPix;
+                const multipersonsegmentation = await net.segmentPersonParts(imageElement,{flipHorizontal,internalResolution,segmentationThreshold,maxDetections,scoreThreshold,nmsRadius,minKeypointScore,refineSteps}); 
+            }, 5000);
+			//
+        })
+    }
+......
+```
+返回一个数组multipersonsegmentation,当图像中有多个人时，multipersonsegmentataion数组中的每个对象代表一个人。除了width，height和data，PersonSegmentation对象也有一个字段pose，与posenet插件类似。data对象包括每个像素的值，为1表示人像，为0表示背景，-1为非人像背景。<br>
+与segmentPerson的区别：segmentPerson不能区分每个人像。<br>
+4.4、Multi-person body part segmentation<br>
+给定具有多个人的图像。BodyPix的segmentMultiPersonParts方法可以预测每个人的24个身体部位细分。它返回一个数组的PartSegmentations，各自对应的人之一。该PartSegmentation对象包含一个宽度，高度Pose和一个Int32Array，其ID为对应的身体部位的一部分，其ID为0-24，否则为-1。<br>
+```
+......
+	multipersonbodypartSegmentation(args, util) {
+		return new Promise((resolve, reject) => {
+            this.timer = setInterval(async () => {
+				const imageElement = this.video;
+				this.video.width = 640;
+				this.video.height = 480;
+				const flipHorizontal = false;
+				const internalResolution = 'medium';
+				const segmentationThreshold = 0.7;
+				const maxDetections = 5;
+				const scoreThreshold = 0.2;
+				const nmsRadius = 20;
+				const minKeypointScore = 0.3;
+				const refineSteps = 10;
+				//
+				const net = this.bodyPix;
+                const multipersonbodypartsegmentation = await net.segmentMultiPersonParts(imageElement,{flipHorizontal,internalResolution,segmentationThreshold,maxDetections,scoreThreshold,nmsRadius,minKeypointScore,refineSteps}); 
+                console.log(multipersonbodypartsegmentation)
+            }, 5000);
+			//
+        })
+    }
+......
+```
+返回数组multipersonbodypartsegmentation，当图像中有多个人时，数组中的每个对象代表一个人。除了width，height和data，multipersonbodypartsegmentation对象也有一个字段pose,它包含每个人的姿势与PoseNet模型相同，但准确性较差。data对象中包括每个像素的值，当为-1时代表非人像背景，为0时代表左脸。（0——23）<br>
+`综上调用各个函数可以实现不同的功能，但输出的仍是数组的形式，再调用body-pix相应的绘图函数即可在画布上完成相应的功能。`<br>
+### 五、Bodypix可视化功能<br>
+5.1、bodyPix.toMask<br>
+给定人员分割（或多人分割）的输出，生成每个像素的可视化效果，该可视化由输出中像素处的相应二进制分割值确定。换句话说，有人的像素将由前景色着色，而没有人的像素将由背景色着色。可以用作合成时遮盖人物或背景的遮罩。<br>
+```
+......
+			this.timer = setInterval(async () => {
+			    const imageElement = this.video;
+			    this.video.width = 640;
+			    this.video.height = 480;
+			    const flipHorizontal = false;
+			    const internalResolution = 'medium';
+			    const segmentationThreshold = 0.7;
+			    const maxDetections = 5;
+			    const scoreThreshold = 0.3;
+			    const nmsRadius = 20;
+			    const net = this.bodyPix;
+			    const segmentation = await net.segmentPerson(imageElement,{flipHorizontal,internalResolution,segmentationThreshold,maxDetections,scoreThreshold,nmsRadius});
+			    const foregroundColor = {r: 255, g: 255, b: 255, a: 255};
+			    const backgroundColor = {r: 0, g: 0, b: 0, a: 255};
+			    const coloredPartImage = bodyPix.toMask(segmentation, foregroundColor, backgroundColor,true);
+			    const opacity = 0.7;
+			    const maskBlurAmount = 0;
+			    bodyPix.drawMask(canvas,imageElement,coloredPartImage, opacity, maskBlurAmount,flipHorizontal);
+
+            }, 1000);
+......
+```
+返回具有personSegmentation宽度和高度相同的ImageData，每个像素的颜色和不透明度由来自输出的像素处的相应二进制分割值确定。如果设置foregroundColor为{r：0，g：0，b：0，a：255}且设置backgroundColor为{r：0，g： 0，b：0，a：0}，该方法可用于遮盖背景。<br>
+5.2、bodyPix.toColoredPartMask<br>
+给定人体部位分割（或多人人体部位分割）的输出以及由部件ID索引的颜色数组，将生成一个图像，该图像在每个像素处具有对应于每个部位的相应颜色，而在白色像素中则没有部位。<br>
+```
+......
+bodyPix.drawMask(canvas,imageElement,coloredPartImage, opacity, maskBlurAmount,flipHorizontal);
+......
+```
+返回具有与估计的人的部分分割相同的宽度和高度的ImageData，在每个像素处每个部分具有对应的颜色，而在没有像素的地方则具有黑色像素。<br>
+5.3、bodyPix.drawMask<br>
+在画布上绘制图像，并用ImageData在其顶部绘制一个具有指定不透明度的遮罩；ImageData的使用通常产生toMask或toColoredPartMask。<br>
+```
+......
+bodyPix.drawMask(canvas,imageElement,backgroundDarkeningMask, opacity, maskBlurAmount,flipHorizontal);
+......
+```
+返回绘制一个具有指定不透明度的遮罩。<br>
+5.4、bodyPix.drawPixelatedMask<br>
+在画布上绘制图像，并ImageData在其顶部绘制一个具有指定不透明度的遮罩；的ImageData使用通常产生toColoredPartMask。不同于drawMask，此渲染功能将像素化效果应用于BodyPix的身体部位分割预测。这允许用户显示低分辨率的身体部位分割，从而提供了身体部位分割预测的美学解释。<br>
+```
+......
+bodyPix.drawPixelatedMask(canvas,imageElement,coloredPartImage, opacity, maskBlurAmount,flipHorizontal,pixelCellWidth);
+......
+```
+返回渲染功能将像素化效果应用于BodyPix的身体部位分割，这允许用户显示低分辨率的身体部位分割，从而提供了身体部位分割预测的美学解释。<br>
+5.5、bodyPix.drawBokehEffect<br>
+给定一个personSegmentation和一个图像，将背景模糊的图像绘制到画布上。<br>
+```
+......
+bodyPix.drawBokehEffect(canvas,imageElement,segmentation, backgroundBlurAmount,edgeBlurAmount,flipHorizontal);
+......
+```
+返回一个背景模糊图像。原理：一个倒置的掩模被从personSegmentation生成，然后将原始图像绘制到画布上，并使用画布合成操作destination-over将蒙版绘制到画布上，从而删除背景。使用合成操作将原始图像模糊并绘制到与现有图像不重叠的画布上。结果显示在最右边的图像中。<br>
+5.6、bodyPix.blurBodyPart<br>
+给定一个PartSegmentation（或PartSegmentation的数组）和一个图像，会使某些人的身体部位（例如左脸和右脸）模糊。<br>
+```
+......
+bodyPix.blurBodyPart(canvas,imageElement,partSegmentation, faceBodyPartIdsToBlur,backgroundBlurAmount,edgeBlurAmount,flipHorizontal);
+......
+```
+返回一个将左脸和右脸模糊的图像，可通过faceBodyPartIdsToBlur进行指定模糊的对象。<br>
+`综上：使用body-pix自带的几种绘图函数可实现不同的效果。同时可参考posenet模型将人像的骨架绘制出来（使用pose对象即可）。`
+### 六、其他<br>
+参考 https://github.com/tensorflow/tfjs-models/tree/master/body-pix#bodypix---person-segmentation-in-the-browser 中的说明,API中的参数imageElement也可以为除了canvas以外的很多类型，发散思维，可以添加本地图片进行分割，彩色，黑白或者模糊处理。
